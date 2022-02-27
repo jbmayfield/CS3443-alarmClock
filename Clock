@@ -1,0 +1,83 @@
+public class Clock
+ {
+     // instance variables
+     private int hours;
+     private int minutes;
+     private int seconds;
+
+   public void setHours(int newHours) {
+    hours = newHours;
+    if (hours<0 || hours > 24) {
+        hours = 0;
+      }
+   }
+   public void setMinutes(int newMinutes) {
+    minutes = newMinutes;
+    if (minutes<0 || minutes > 60) {
+        minutes = 0;
+    }
+   }
+   public void setSeconds(int newSeconds) {
+    seconds = newSeconds;
+    if(seconds<0 || seconds > 60) {
+        seconds = 0;
+    }
+    }
+
+/**
+ * Constructor for objects of class Clock
+ */
+    public Clock(int newHour, int newMinute, int newSecond)
+   {
+    if (newHour > -1 || newHour < 24) {
+        this.hours = newHour;
+    }
+    else {
+        setHours(hours);
+    }
+    if (newMinute > -1 || newMinute < 60) {
+        this.minutes = newMinute;
+    }
+    else {
+        setMinutes(minutes);
+    }
+    if (newSecond > -1 || newSecond < 60) {
+        this.seconds = newSecond;
+    }
+    else {
+        setSeconds(seconds);
+    }
+}
+
+public int getHours() {
+    return hours;
+}
+public int getMinutes() {
+    return minutes;
+}
+public int getSeconds() {
+    return seconds;
+}
+
+public String toString() {
+    return hours + ":"+minutes+":"+seconds;
+}
+
+public void tick() {
+    seconds = seconds +1;
+    if(seconds >= 60)
+    {
+        minutes ++;
+        seconds = 0;
+    }
+    if(minutes >= 60)
+    {
+        hours++;
+        minutes = 0;
+    }
+    if(hours >=24)
+    {
+        hours = 0;
+    } 
+
+}
