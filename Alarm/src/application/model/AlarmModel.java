@@ -1,26 +1,35 @@
 package application.model;
 
 import java.io.BufferedWriter;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class AlarmModel {
 
+	// Format of date used throughout class
+	final DateTimeFormatter format = DateTimeFormatter.ofPattern("h:mm a");
+
+	// Method that checks if given fileName exists, otherwise it creates it
 	public void createFile(String fileName) throws IOException {
-		File inventory = new File(fileName);
-		if (inventory.createNewFile()) {
+		File alarms = new File(fileName);
+		if (alarms.createNewFile()) {
 			System.out.println("Created new file: " + fileName);
 		}
 	}
 
-	public void saveAlarm(int hour, int minute, boolean when, String fileName) throws IOException {
-		createFile(fileName);
-
+	// Method that is called to add a given alarm to alarms.txt
+	public void addAlarm(String alarm, String fileName) throws IOException {
 		File f1 = new File(fileName);
 		Scanner infile = new Scanner(f1);
+
 		ArrayList<String> alarms = new ArrayList<String>();
 		while (infile.hasNext()) {
 			alarms.add(infile.nextLine());
@@ -33,15 +42,14 @@ public class AlarmModel {
 			FileWriter fw = new FileWriter(fileName, true);
 			BufferedWriter bw = new BufferedWriter(fw);
 
-			bw.append(hour + " " + minute + " " + ((when) ? "AM" : "PM"));
+			bw.append(alarm);
 			bw.newLine();
 			bw.close();
 		}
 	}
 
+	// Method that is called to remove a given alarm from alarms.txt
 	public void removeAlarm(int count, String fileName) throws IOException {
-		createFile(fileName);
-
 		File f1 = new File(fileName);
 		Scanner infile = new Scanner(f1);
 		ArrayList<String> alarms = new ArrayList<String>();
@@ -65,56 +73,96 @@ public class AlarmModel {
 			}
 
 			bw.close();
-
 		}
 	}
 
-	public ArrayList<String> loadAlarms1(String fileName) throws IOException {
-		createFile(fileName);
-
+	// Returns ArrayList of Strings from alarms.txt
+	public ArrayList<String> loadAlarms1(String fileName) throws IOException, ParseException {
 		File f1 = new File(fileName);
 		Scanner infile = new Scanner(f1);
-		ArrayList<String[]> alarms = new ArrayList<String[]>();
+
+		ArrayList<String> alarms = new ArrayList<String>();
 		while (infile.hasNext()) {
-			String split[] = infile.nextLine().split(" ");
-			alarms.add(split);
+			alarms.add(infile.nextLine());
 		}
 		infile.close();
 
 		ArrayList<String> alarms1 = new ArrayList<String>();
 		for (int i = 0; i < alarms.size(); i++) {
 			if ((i < 10)) {
-				alarms1.add((alarms.get(i)[0].length() < 2 ? "0" + alarms.get(i)[0] : alarms.get(i)[0]) + ":"
-						+ (alarms.get(i)[1].length() < 2 ? "0" + alarms.get(i)[1] : alarms.get(i)[1]) + " "
-						+ alarms.get(i)[2]);
+				alarms1.add(alarms.get(i));
 			}
 		}
 
 		return alarms1;
 	}
 
-	public ArrayList<String> loadAlarms2(String fileName) throws IOException {
-		createFile(fileName);
-
+	// Returns ArrayList of Strings from alarms.txt
+	public ArrayList<String> loadAlarms2(String fileName) throws IOException, ParseException {
 		File f1 = new File(fileName);
 		Scanner infile = new Scanner(f1);
-		ArrayList<String[]> alarms = new ArrayList<String[]>();
+
+		ArrayList<String> alarms = new ArrayList<String>();
 		while (infile.hasNext()) {
-			String split[] = infile.nextLine().split(" ");
-			alarms.add(split);
+			alarms.add(infile.nextLine());
 		}
 		infile.close();
 
 		ArrayList<String> alarms2 = new ArrayList<String>();
 		for (int i = 0; i < alarms.size(); i++) {
 			if (!(i < 10)) {
-				alarms2.add((alarms.get(i)[0].length() < 2 ? "0" + alarms.get(i)[0] : alarms.get(i)[0]) + ":"
-						+ (alarms.get(i)[1].length() < 2 ? "0" + alarms.get(i)[1] : alarms.get(i)[1]) + " "
-						+ alarms.get(i)[2]);
+				alarms2.add(alarms.get(i));
 			}
 		}
 
 		return alarms2;
 	}
 
+	// Method that looks for alarm that is closest to current time and returns it
+	public String updateNextAlarm(String fileName) throws IOException, ParseException {
+		ArrayList<String> alarms1List = loadAlarms1(fileName);
+		ArrayList<String> alarms2List = loadAlarms2(fileName);
+
+		if (alarms1List.isEmpty()) {
+			return "No Alarms Set";
+		}
+
+		LocalDateTime today = LocalDateTime.now();
+
+		LocalDateTime nextAlarmTime = LocalDateTime.MAX;
+		if (!alarms1List.isEmpty()) {
+			for (int i = 0; i < alarms1List.size(); i++) {
+				LocalDateTime alarmCheck = LocalDateTime.of(today.toLocalDate(),
+						LocalTime.parse(alarms1List.get(i), format));
+
+				if (alarmCheck.isBefore(today)) {
+					alarmCheck = alarmCheck.plusDays(1);
+				}
+
+				if (alarmCheck.isAfter(today)) {
+
+					if (alarmCheck.isBefore(nextAlarmTime)) {
+						nextAlarmTime = alarmCheck;
+					}
+				}
+			}
+
+			for (int i = 0; i < alarms2List.size(); i++) {
+				LocalDateTime alarmCheck = LocalDateTime.of(today.toLocalDate(),
+						LocalTime.parse(alarms1List.get(i), format));
+
+				if (alarmCheck.isBefore(today)) {
+					alarmCheck = alarmCheck.plusDays(1);
+				}
+
+				if (alarmCheck.isAfter(today)) {
+					if (alarmCheck.isBefore(nextAlarmTime)) {
+						nextAlarmTime = alarmCheck;
+					}
+				}
+			}
+		}
+
+		return (nextAlarmTime.format(format));
+	}
 }
